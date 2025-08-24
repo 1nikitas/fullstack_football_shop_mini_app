@@ -13,6 +13,15 @@ SSL_DIR = ssl_certs
 DJANGO_PORT = 8001
 REACT_PORT = 3001
 
+# Проверка установлен ли Poetry
+.PHONY: poetry-check
+poetry-check:
+	@command -v $(POETRY) >/dev/null 2>&1 || { \
+		echo "⚠️  Poetry не найден. Установите Poetry командой:"; \
+		echo "  curl -sSL https://install.python-poetry.org | python3 -"; \
+		exit 1; \
+	}
+
 # Проверка доступности портов
 .PHONY: check-ports
 check-ports:
@@ -56,10 +65,10 @@ help:
 	@echo "  make help         - Показать эту справку"
 
 .PHONY: install
-install: install-backend install-frontend
+install: poetry-check install-backend install-frontend
 
 .PHONY: install-backend
-install-backend:
+install-backend: poetry-check
 	@echo "Установка зависимостей бэкенда через Poetry..."
 	cd $(BACKEND_DIR) && $(POETRY) install --no-root
 	@echo "Бэкенд зависимости установлены"
@@ -106,7 +115,7 @@ setup-prod:
 	fi
 
 .PHONY: backend
-backend: setup-local
+backend: poetry-check setup-local
 	@echo "Запуск бэкенд сервера на localhost через Poetry..."
 	cd $(BACKEND_DIR) && $(POETRY) run python manage.py runserver 0.0.0.0:$(DJANGO_PORT) --settings=football_mini_app.settings_local
 
@@ -116,12 +125,12 @@ frontend:
 	cd $(FRONTEND_DIR) && $(NPM) run dev -- --host 0.0.0.0 --port $(REACT_PORT)
 
 .PHONY: backend-local
-backend-local:
+backend-local: poetry-check
 	@echo "Запуск бэкенд сервера на localhost через Poetry..."
 	cd $(BACKEND_DIR) && $(POETRY) run python manage.py runserver 0.0.0.0:$(DJANGO_PORT) --settings=football_mini_app.settings_local
 
 .PHONY: backend-prod
-backend-prod:
+backend-prod: poetry-check
 	@echo "Запуск бэкенд сервера с доменом $(DOMAIN) через Poetry..."
 	cd $(BACKEND_DIR) && $(POETRY) run python manage.py runserver 0.0.0.0:$(DJANGO_PORT) --settings=football_mini_app.settings_prod
 
@@ -179,7 +188,7 @@ setup-nginx:
 	fi
 
 .PHONY: check-env
-check-env:
+check-env: poetry-check
 	@echo "Проверка окружения..."
 	@echo "Node.js версия: $(shell node --version)"
 	@echo "Python версия: $(shell python3 --version)"
@@ -230,7 +239,7 @@ clean:
 	@echo "Очистка завершена"
 
 .PHONY: lint
-lint:
+lint: poetry-check
 	@echo "Проверка кода линтерами..."
 	cd $(BACKEND_DIR) && $(POETRY) run black --check .
 	cd $(BACKEND_DIR) && $(POETRY) run isort --check .
@@ -238,34 +247,34 @@ lint:
 	@echo "Проверка завершена"
 
 .PHONY: format
-format:
+format: poetry-check
 	@echo "Форматирование кода..."
 	cd $(BACKEND_DIR) && $(POETRY) run black .
 	cd $(BACKEND_DIR) && $(POETRY) run isort .
 	@echo "Форматирование завершено"
 
 .PHONY: test
-test:
+test: poetry-check
 	@echo "Запуск тестов..."
 	cd $(BACKEND_DIR) && $(POETRY) run python manage.py test
 
 .PHONY: migrate
-migrate:
+migrate: poetry-check
 	@echo "Применение миграций..."
 	cd $(BACKEND_DIR) && $(POETRY) run python manage.py migrate
 
 .PHONY: makemigrations
-makemigrations:
+makemigrations: poetry-check
 	@echo "Создание миграций..."
 	cd $(BACKEND_DIR) && $(POETRY) run python manage.py makemigrations
 
 .PHONY: createsuperuser
-createsuperuser:
+createsuperuser: poetry-check
 	@echo "Создание суперпользователя..."
 	cd $(BACKEND_DIR) && $(POETRY) run python manage.py createsuperuser
 
 .PHONY: collectstatic
-collectstatic:
+collectstatic: poetry-check
 	@echo "Сбор статических файлов..."
 	cd $(BACKEND_DIR) && $(POETRY) run python manage.py collectstatic --noinput
 
@@ -304,12 +313,12 @@ deploy: install ssl-setup setup-prod
 	@echo "Запустите: make run-prod для запуска приложения с доменом $(DOMAIN)"
 
 .PHONY: shell
-shell:
+shell: poetry-check
 	@echo "Запуск shell в виртуальном окружении Poetry..."
 	cd $(BACKEND_DIR) && $(POETRY) shell
 
 .PHONY: add-dependency
-add-dependency:
+add-dependency: poetry-check
 	@echo "Добавление зависимости в бэкенд..."
 	@if [ -z "$(pkg)" ]; then \
 		echo "Использование: make add-dependency pkg=package-name"; \
@@ -318,7 +327,7 @@ add-dependency:
 	fi
 
 .PHONY: add-dev-dependency
-add-dev-dependency:
+add-dev-dependency: poetry-check
 	@echo "Добавление dev-зависимости в бэкенд..."
 	@if [ -z "$(pkg)" ]; then \
 		echo "Использование: make add-dev-dependency pkg=package-name"; \
