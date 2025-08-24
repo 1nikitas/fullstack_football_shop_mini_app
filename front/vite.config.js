@@ -5,6 +5,22 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
-    allowedHosts: ['e3a4adaedb71.ngrok-free.app'],
+    host: '0.0.0.0',
+    port: 3000,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'rooneyform.ru',
+      'www.rooneyform.ru',
+      'e3a4adaedb71.ngrok-free.app'
+    ],
+    cors: true,
+    hmr: {
+      host: 'localhost'
+    }
   },
+  preview: {
+    host: '0.0.0.0',
+    port: 3000
+  }
 })

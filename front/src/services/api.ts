@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:8000/api';
+import config from '../config/environment';
+
+const API_BASE_URL = `${config.apiUrl}/api`;
 
 export interface Product {
     id: number;
