@@ -10,8 +10,8 @@ NPM = npm
 DOMAIN = rooneyform.ru
 LOCAL_DOMAIN = localhost
 SSL_DIR = ssl_certs
-DJANGO_PORT = 8000
-REACT_PORT = 3000
+DJANGO_PORT = 8001
+REACT_PORT = 3001
 
 # Проверка доступности портов
 .PHONY: check-ports
@@ -46,6 +46,7 @@ help:
 	@echo "  make setup-hosts  - Настройка hosts файла для домена $(DOMAIN)"
 	@echo "  make check-domain - Проверка доступности домена $(DOMAIN)"
 	@echo "  make check-env    - Проверка окружения (Node.js, Python, Poetry)"
+	@echo "  make setup-nginx  - Настройка Nginx для домена $(DOMAIN)"
 	@echo "  make check-ports  - Проверка доступности портов"
 	@echo "  make stop         - Остановка всех сервисов"
 	@echo "  make force-stop   - Принудительная остановка сервисов"
@@ -166,6 +167,15 @@ check-domain:
 		$(SCRIPTS_DIR)/check_domain.sh; \
 	else \
 		echo "Скрипт check_domain.sh не найден"; \
+	fi
+
+.PHONY: setup-nginx
+setup-nginx:
+	@echo "Настройка Nginx для домена $(DOMAIN)..."
+	@if [ -f "$(SCRIPTS_DIR)/setup_nginx.sh" ]; then \
+		$(SCRIPTS_DIR)/setup_nginx.sh; \
+	else \
+		echo "Скрипт setup_nginx.sh не найден"; \
 	fi
 
 .PHONY: check-env
