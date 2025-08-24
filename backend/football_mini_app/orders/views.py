@@ -19,9 +19,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         telegram_id = self.request.query_params.get("telegram_id")
         if telegram_id:
             try:
+                # Преобразуем telegram_id в число
+                telegram_id = int(telegram_id)
                 user = User.objects.get(telegram_id=telegram_id)
                 return Order.objects.filter(user=user)
-            except User.DoesNotExist:
+            except (ValueError, User.DoesNotExist):
                 return Order.objects.none()
         return Order.objects.none()
 
@@ -52,8 +54,10 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         # Получаем пользователя по telegram_id
         try:
+            # Преобразуем telegram_id в число
+            telegram_id = int(telegram_id)
             user = User.objects.get(telegram_id=telegram_id)
-        except User.DoesNotExist:
+        except (ValueError, User.DoesNotExist):
             return Response(
                 {"error": "Пользователь не найден"},
                 status=status.HTTP_404_NOT_FOUND,
@@ -148,6 +152,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            # Преобразуем telegram_id в число
+            telegram_id = int(telegram_id)
             user = User.objects.get(telegram_id=telegram_id)
             order = Order.objects.get(id=pk, user=user)
 
@@ -191,9 +197,11 @@ class OrderViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            # Преобразуем telegram_id в число
+            telegram_id = int(telegram_id)
             user = User.objects.get(telegram_id=telegram_id)
             orders = Order.objects.filter(user=user)
-        except User.DoesNotExist:
+        except (ValueError, User.DoesNotExist):
             return Response(
                 {"error": "Пользователь не найден"},
                 status=status.HTTP_404_NOT_FOUND,

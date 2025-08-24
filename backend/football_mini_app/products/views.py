@@ -177,8 +177,18 @@ class CartItemViewSet(viewsets.ModelViewSet):
         # Получаем telegram_id из данных запроса
         telegram_id = self.request.data.get("telegram_id")
         if telegram_id:
-            user, created = User.objects.get_or_create(telegram_id=telegram_id)
-            serializer.save(user=user)
+            try:
+                # Преобразуем telegram_id в число
+                telegram_id = int(telegram_id)
+                user, created = User.objects.get_or_create(telegram_id=telegram_id)
+                serializer.save(user=user)
+                print(f"CartItem created successfully for user {user.telegram_id}")
+            except ValueError as e:
+                print(f"ValueError in perform_create: {e}")
+                raise
+        else:
+            print("No telegram_id provided")
+            raise ValueError("telegram_id is required")
 
     @action(detail=False, methods=["delete"])
     def clear(self, request):
@@ -190,10 +200,12 @@ class CartItemViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            # Преобразуем telegram_id в число
+            telegram_id = int(telegram_id)
             user = User.objects.get(telegram_id=telegram_id)
             CartItem.objects.filter(user=user).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        except User.DoesNotExist:
+        except (ValueError, User.DoesNotExist):
             return Response(
                 {"error": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND
             )
@@ -208,13 +220,15 @@ class CartItemViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            # Преобразуем telegram_id в число
+            telegram_id = int(telegram_id)
             user = User.objects.get(telegram_id=telegram_id)
             cart_items = CartItem.objects.filter(user=user)
             serializer = CartItemSerializer(
                 cart_items, many=True, context={"request": request}
             )
             return Response(serializer.data)
-        except User.DoesNotExist:
+        except (ValueError, User.DoesNotExist):
             return Response([])
 
 
@@ -227,9 +241,11 @@ class FavoriteViewSet(viewsets.ModelViewSet):
         telegram_id = self.request.query_params.get("telegram_id")
         if telegram_id:
             try:
+                # Преобразуем telegram_id в число
+                telegram_id = int(telegram_id)
                 user = User.objects.get(telegram_id=telegram_id)
                 return Favorite.objects.filter(user=user)
-            except User.DoesNotExist:
+            except (ValueError, User.DoesNotExist):
                 return Favorite.objects.none()
         return Favorite.objects.none()
 
@@ -237,8 +253,18 @@ class FavoriteViewSet(viewsets.ModelViewSet):
         # Получаем telegram_id из данных запроса
         telegram_id = self.request.data.get("telegram_id")
         if telegram_id:
-            user, created = User.objects.get_or_create(telegram_id=telegram_id)
-            serializer.save(user=user)
+            try:
+                # Преобразуем telegram_id в число
+                telegram_id = int(telegram_id)
+                user, created = User.objects.get_or_create(telegram_id=telegram_id)
+                serializer.save(user=user)
+                print(f"Favorite created successfully for user {user.telegram_id}")
+            except ValueError as e:
+                print(f"ValueError in perform_create: {e}")
+                raise
+        else:
+            print("No telegram_id provided")
+            raise ValueError("telegram_id is required")
 
     @action(detail=True, methods=["get"])
     def check(self, request, pk=None):
@@ -250,10 +276,12 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            # Преобразуем telegram_id в число
+            telegram_id = int(telegram_id)
             user = User.objects.get(telegram_id=telegram_id)
             is_favorite = Favorite.objects.filter(user=user, product_id=pk).exists()
             return Response({"is_favorite": is_favorite})
-        except User.DoesNotExist:
+        except (ValueError, User.DoesNotExist):
             return Response({"is_favorite": False})
 
     @action(detail=False, methods=["get"])
@@ -266,11 +294,13 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            # Преобразуем telegram_id в число
+            telegram_id = int(telegram_id)
             user = User.objects.get(telegram_id=telegram_id)
             favorites = Favorite.objects.filter(user=user)
             serializer = FavoriteSerializer(
                 favorites, many=True, context={"request": request}
             )
             return Response(serializer.data)
-        except User.DoesNotExist:
+        except (ValueError, User.DoesNotExist):
             return Response([])

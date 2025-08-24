@@ -4,15 +4,12 @@ import { ModalHeader } from './ModalHeader';
 interface FilterPanelProps {
     isOpen: boolean;
     onClose: () => void;
+    onApplyFilters: (filters: any) => void;
+    activeFilters: any;
 }
 
-export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => {
-    const [filters, setFilters] = useState({
-        manufacturer: '',
-        league: '',
-        size: '',
-        condition: ''
-    });
+export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose, onApplyFilters, activeFilters }) => {
+    const [filters, setFilters] = useState(activeFilters);
 
     if (!isOpen) return null;
 
@@ -26,7 +23,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
     };
 
     const handleApply = () => {
-        // Здесь будет логика применения фильтров
+        onApplyFilters(filters);
         onClose();
     };
 

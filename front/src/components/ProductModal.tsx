@@ -1,31 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { ModalHeader } from './ModalHeader';
-
-interface Badge {
-    type: string;
-    value: string;
-}
-
-interface Product {
-    id: number;
-    name: string;
-    manufacturer: string;
-    league: string;
-    season: string;
-    price: number;
-    size: string[];
-    condition: string;
-    images: string[];
-    badges: Badge[];
-}
+import { Product } from '../services/api';
 
 interface ProductModalProps {
     product: Product | null;
     isOpen: boolean;
     onClose: () => void;
+    onAddToCart: (product: Product) => void;
+    onToggleFavorite: (product: Product) => void;
+    isFavorite: boolean;
 }
 
-export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose }) => {
+export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onClose, onAddToCart, onToggleFavorite, isFavorite }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -56,11 +42,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
     };
 
     const nextImage = () => {
-        setCurrentImageIndex((prev) => (prev + 1) % product!.images.length);
+        setCurrentImageIndex((prev) => (prev + 1) % product!.images_count);
     };
 
     const prevImage = () => {
-        setCurrentImageIndex((prev) => (prev - 1 + product!.images.length) % product!.images.length);
+        setCurrentImageIndex((prev) => (prev - 1 + product!.images_count) % product!.images_count);
     };
 
     if (!isVisible || !product) return null;
@@ -98,14 +84,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                             {/* Main Image */}
                             <div className="relative aspect-square overflow-hidden rounded-lg">
                                 <img
-                                    src={product.images[currentImageIndex]}
+                                    src={product.images[currentImageIndex]?.image_url || '/placeholder-image.jpg'}
                                     alt={`${product.name} - фото ${currentImageIndex + 1}`}
                                     className="w-full h-full object-cover transition-opacity duration-300"
                                     key={currentImageIndex}
                                 />
 
                                 {/* Navigation Arrows */}
-                                {product.images.length > 1 && (
+                                {product.images_count > 1 && (
                                     <>
                                         <button
                                             onClick={prevImage}
@@ -124,9 +110,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                             </div>
 
                             {/* Thumbnails */}
-                            {product.images.length > 1 && (
+                            {product.images_count > 1 && (
                                 <div className="flex gap-2 overflow-x-auto">
-                                    {product.images.map((image, index) => (
+                                    {product.images.slice(0, 5).map((image, index) => (
                                         <button
                                             key={index}
                                             onClick={() => setCurrentImageIndex(index)}
@@ -136,7 +122,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
                                                 }`}
                                         >
                                             <img
-                                                src={image}
+                                                src={image.image_url}
                                                 alt={`${product.name} - миниатюра ${index + 1}`}
                                                 className="w-full h-full object-cover"
                                             />
@@ -188,27 +174,31 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, isOpen, onC
 
                                 {/* Sizes */}
                                 <div>
-                                    <span className="text-xs sm:text-sm font-medium text-gray-500">Доступные размеры</span>
+                                    <span className="text-xs sm:text-sm font-medium text-gray-500">Размер</span>
                                     <div className="flex gap-2 mt-2 flex-wrap">
-                                        {product.size.map((size, index) => (
-                                            <button
-                                                key={size}
-                                                className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-all duration-200 hover:scale-105"
-                                            >
-                                                {size}
-                                            </button>
-                                        ))}
+                                        <span className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                                            {product.size}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Actions */}
                             <div className="flex gap-3 pt-4">
-                                <button className="flex-1 bg-primary-600 text-white py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-primary-700 transition-all duration-200 hover:scale-105 active:scale-95 text-sm sm:text-base">
+                                <button
+                                    onClick={() => onAddToCart(product)}
+                                    className="flex-1 bg-primary-600 text-white py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-primary-700 transition-all duration-200 hover:scale-105 active:scale-95 text-sm sm:text-base"
+                                >
                                     🛒 Добавить в корзину
                                 </button>
-                                <button className="px-4 sm:px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 hover:scale-105 active:scale-95">
-                                    ❤️
+                                <button
+                                    onClick={() => onToggleFavorite(product)}
+                                    className={`px-4 sm:px-6 py-3 border rounded-lg transition-all duration-200 hover:scale-105 active:scale-95 ${isFavorite
+                                            ? 'border-red-500 bg-red-50 text-red-600 hover:bg-red-100'
+                                            : 'border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    {isFavorite ? '❤️' : '🤍'}
                                 </button>
                             </div>
                         </div>

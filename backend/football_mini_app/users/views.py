@@ -33,16 +33,24 @@ class UserViewSet(viewsets.ModelViewSet):
                 {"error": "telegram_id обязателен"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Проверяем, существует ли пользователь
-        user, created = User.objects.get_or_create(
-            telegram_id=telegram_id,
-            defaults={
-                "username": username,
-                "first_name": first_name,
-                "last_name": last_name,
-                "phone_number": phone_number,
-            },
-        )
+        try:
+            # Преобразуем telegram_id в число
+            telegram_id = int(telegram_id)
+            # Проверяем, существует ли пользователь
+            user, created = User.objects.get_or_create(
+                telegram_id=telegram_id,
+                defaults={
+                    "username": username,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "phone_number": phone_number,
+                },
+            )
+        except ValueError:
+            return Response(
+                {"error": "Неверный формат telegram_id"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if not created:
             # Обновляем данные пользователя

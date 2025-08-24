@@ -130,14 +130,17 @@ class CartItemSerializer(serializers.ModelSerializer):
 
 
 class CartItemCreateSerializer(serializers.ModelSerializer):
+    telegram_id = serializers.IntegerField(write_only=True)
+
     class Meta:
         model = CartItem
-        fields = ["product", "quantity", "selected_size"]
+        fields = ["product", "quantity", "selected_size", "telegram_id"]
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
+    telegram_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Favorite
-        fields = ["id", "product", "created_at"]
+        fields = ["id", "product", "created_at", "telegram_id"]

@@ -1,25 +1,13 @@
 import React from 'react';
 import { ModalHeader } from './ModalHeader';
-
-interface Product {
-    id: number;
-    name: string;
-    manufacturer: string;
-    league: string;
-    season: string;
-    price: number;
-    size: string[];
-    condition: string;
-    images: string[];
-    badges: { type: string; value: string; }[];
-}
+import { Favorite } from '../services/api';
 
 interface FavoritesModalProps {
     isOpen: boolean;
     onClose: () => void;
-    favorites: Product[];
+    favorites: Favorite[];
     onRemoveFromFavorites: (productId: number) => void;
-    onAddToCart: (product: Product) => void;
+    onAddToCart: (product: any) => void;
 }
 
 export const FavoritesModal: React.FC<FavoritesModalProps> = ({
@@ -58,13 +46,13 @@ export const FavoritesModal: React.FC<FavoritesModalProps> = ({
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {favorites.map((product) => (
-                                    <div key={product.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
+                                    {favorites.map((favorite) => (
+                                        <div key={favorite.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
                                         {/* Product Image */}
                                         <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
                                             <img
-                                                src={product.images[0]}
-                                                alt={product.name}
+                                                src={favorite.product.images[0]?.image_url || '/placeholder-image.jpg'}
+                                                alt={favorite.product.name}
                                                 className="w-full h-full object-cover rounded-lg"
                                             />
                                         </div>
@@ -72,26 +60,26 @@ export const FavoritesModal: React.FC<FavoritesModalProps> = ({
                                         {/* Product Info */}
                                         <div className="flex-1 min-w-0">
                                             <h3 className="font-medium text-gray-900 text-sm sm:text-base line-clamp-2">
-                                                {product.name}
+                                                {favorite.product.name}
                                             </h3>
                                             <p className="text-gray-500 text-xs sm:text-sm mt-1">
-                                                {product.manufacturer} • {product.league}
+                                                {favorite.product.manufacturer} • {favorite.product.league}
                                             </p>
                                             <p className="text-lg font-bold text-gray-900 mt-2">
-                                                {product.price.toLocaleString('ru-RU')} ₽
+                                                {favorite.product.price.toLocaleString('ru-RU')} ₽
                                             </p>
                                         </div>
 
                                         {/* Actions */}
                                         <div className="flex flex-col gap-2">
                                             <button
-                                                onClick={() => onAddToCart(product)}
+                                                onClick={() => onAddToCart(favorite.product)}
                                                 className="px-3 py-2 bg-primary-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
                                             >
                                                 В корзину
                                             </button>
                                             <button
-                                                onClick={() => onRemoveFromFavorites(product.id)}
+                                                onClick={() => onRemoveFromFavorites(favorite.product.id)}
                                                 className="px-3 py-2 bg-gray-100 text-gray-700 text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
                                             >
                                                 Убрать

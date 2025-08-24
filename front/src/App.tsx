@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { Header } from './components/Header';
@@ -9,99 +9,7 @@ import { ProductModal } from './components/ProductModal';
 import { FloatingButtons } from './components/FloatingButtons';
 import { FavoritesModal } from './components/FavoritesModal';
 import { useTelegramWebApp } from './hooks/useTelegramWebApp';
-
-// Импорт изображений
-import test1 from './assets/test1.jpg';
-import test1_1 from './assets/test1_1.jpg';
-import test2 from './assets/test2.jpg';
-import test2_2 from './assets/test2_2.jpg';
-import test3 from './assets/test3.jpg';
-import test3_3 from './assets/test3_3.jpg';
-import test4 from './assets/test4.jpg';
-import test4_4 from './assets/test4_4.jpg';
-
-// Типы
-interface Badge {
-    type: string;
-    value: string;
-}
-
-interface Product {
-    id: number;
-    name: string;
-    manufacturer: string;
-    league: string;
-    season: string;
-    price: number;
-    size: string[];
-    condition: string;
-    images: string[];
-    badges: Badge[];
-}
-
-// Тестовые данные с изображениями
-const testProducts: Product[] = [
-    {
-        id: 1,
-        name: "Футболка Барселона 2023",
-        manufacturer: "Nike",
-        league: "Ла Лига",
-        season: "2023/24",
-        price: 6500,
-        size: ["M"],
-        condition: "Новая",
-        images: [test1, test1_1],
-        badges: [
-            { type: 'type', value: 'Домашняя' },
-            { type: 'league', value: 'Ла Лига' }
-        ]
-    },
-    {
-        id: 2,
-        name: "Футболка Аргентина 2022",
-        manufacturer: "Adidas",
-        league: "ЧМ",
-        season: "2022",
-        price: 7000,
-        size: ["L"],
-        condition: "Новая",
-        images: [test2, test2_2],
-        badges: [
-            { type: 'type', value: 'Домашняя' },
-            { type: 'tournament', value: 'ЧМ 2022' }
-        ]
-    },
-    {
-        id: 3,
-        name: "Футболка Манчестер Юнайтед 2023",
-        manufacturer: "Adidas",
-        league: "АПЛ",
-        season: "2023/24",
-        price: 8000,
-        size: ["S", "M", "L"],
-        condition: "Новая",
-        images: [test3, test3_3],
-        badges: [
-            { type: 'type', value: 'Гостевая' },
-            { type: 'league', value: 'АПЛ' }
-        ]
-    },
-    {
-        id: 4,
-        name: "Футболка Бразилия 2022",
-        manufacturer: "Nike",
-        league: "ЧМ",
-        season: "2022",
-        price: 5500,
-        size: ["M", "L"],
-        condition: "Б/У",
-        images: [test4, test4_4],
-        badges: [
-            { type: 'type', value: 'Домашняя' },
-            { type: 'tournament', value: 'ЧМ 2022' }
-        ]
-    }
-];
+import { apiService, Product, CartItem, Favorite } from './services/api';
 
 const AppContent: React.FC = () => {
     const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -111,8 +19,10 @@ const AppContent: React.FC = () => {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentView, setCurrentView] = useState<'main' | 'filters' | 'cart'>('main');
-    const [cartItems, setCartItems] = useState<Product[]>([]);
-    const [favorites, setFavorites] = useState<Product[]>([]);
+    const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [favorites, setFavorites] = useState<Favorite[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
     const [activeFilters, setActiveFilters] = useState({
         manufacturer: '',
         league: '',
@@ -122,6 +32,46 @@ const AppContent: React.FC = () => {
     });
 
     const { isTelegramWebApp, safeAreaTop, canGoBack, goBack } = useTelegramWebApp();
+
+    // Моковый telegram_id для тестирования (в реальном приложении будет получен из Telegram WebApp)
+    const mockTelegramId = 123456789;
+
+    // Загрузка продуктов при монтировании компонента
+    useEffect(() => {
+        loadProducts();
+        loadCart();
+        loadFavorites();
+    }, []);
+
+    const loadProducts = async () => {
+        try {
+            setLoading(true);
+            const productsData = await apiService.getProducts();
+            setProducts(productsData);
+        } catch (error) {
+            console.error('Ошибка загрузки продуктов:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadCart = async () => {
+        try {
+            const cartData = await apiService.getCart(mockTelegramId);
+            setCartItems(cartData);
+        } catch (error) {
+            console.error('Ошибка загрузки корзины:', error);
+        }
+    };
+
+    const loadFavorites = async () => {
+        try {
+            const favoritesData = await apiService.getFavorites(mockTelegramId);
+            setFavorites(favoritesData);
+        } catch (error) {
+            console.error('Ошибка загрузки избранного:', error);
+        }
+    };
 
     const openFilters = () => {
         setIsFiltersOpen(true);
@@ -175,27 +125,80 @@ const AppContent: React.FC = () => {
         }
     };
 
-    const handleAddToCart = (product: Product) => {
-        setCartItems(prev => [...prev, product]);
+    const handleAddToCart = async (product: Product) => {
+        try {
+            const newCartItem = await apiService.addToCart(
+                mockTelegramId,
+                product.id,
+                1,
+                product.size || 'M'
+            );
+            await loadCart(); // Перезагружаем корзину
+        } catch (error) {
+            console.error('Ошибка добавления в корзину:', error);
+        }
     };
 
-    const handleToggleFavorite = (product: Product) => {
-        setFavorites(prev => {
-            const isFavorite = prev.some(fav => fav.id === product.id);
+    const handleToggleFavorite = async (product: Product) => {
+        try {
+            const isFavorite = favorites.some(fav => fav.product.id === product.id);
+
             if (isFavorite) {
-                return prev.filter(fav => fav.id !== product.id);
+                const favoriteItem = favorites.find(fav => fav.product.id === product.id);
+                if (favoriteItem) {
+                    await apiService.removeFromFavorites(favoriteItem.id);
+                }
             } else {
-                return [...prev, product];
+                await apiService.addToFavorites(mockTelegramId, product.id);
             }
-        });
+
+            await loadFavorites(); // Перезагружаем избранное
+        } catch (error) {
+            console.error('Ошибка работы с избранным:', error);
+        }
     };
 
-    const handleRemoveFromFavorites = (productId: number) => {
-        setFavorites(prev => prev.filter(fav => fav.id !== productId));
+    const handleRemoveFromFavorites = async (productId: number) => {
+        try {
+            const favoriteItem = favorites.find(fav => fav.product.id === productId);
+            if (favoriteItem) {
+                await apiService.removeFromFavorites(favoriteItem.id);
+                await loadFavorites();
+            }
+        } catch (error) {
+            console.error('Ошибка удаления из избранного:', error);
+        }
+    };
+
+    const handleRemoveFromCart = async (cartItemId: number) => {
+        try {
+            await apiService.removeFromCart(cartItemId);
+            await loadCart();
+        } catch (error) {
+            console.error('Ошибка удаления из корзины:', error);
+        }
+    };
+
+    const handleUpdateCartQuantity = async (cartItemId: number, quantity: number) => {
+        try {
+            await apiService.updateCartItem(cartItemId, quantity);
+            await loadCart();
+        } catch (error) {
+            console.error('Ошибка обновления количества:', error);
+        }
+    };
+
+    const handleClearCart = async () => {
+        try {
+            await apiService.clearCart(mockTelegramId);
+            await loadCart();
+        } catch (error) {
+            console.error('Ошибка очистки корзины:', error);
+        }
     };
 
     // Фильтрация товаров по поиску и фильтрам
-    const filteredProducts = testProducts.filter(product => {
+    const filteredProducts = products.filter(product => {
         // Поиск по тексту
         const matchesSearch =
             product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -211,6 +214,17 @@ const AppContent: React.FC = () => {
 
         return matchesSearch && matchesManufacturer && matchesLeague && matchesSeason && matchesCondition && matchesPrice;
     });
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Загрузка товаров...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div
@@ -257,7 +271,7 @@ const AppContent: React.FC = () => {
                                     aria-label="Открыть фильтры"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707l-6.414 6.414A2 2 0 0013 14.586V19a1 1 0 01-1.447.894l-2-1A1 1 0 019 18v-3.414a2 2 0 00-.293-1.293L2.293 6.707A1 1 0 012 6V4z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707l-6.414 6.414A2 2 0 0013 14.586V19a1 1 0 01-1.447.894l-2-1A1 1 0 009 18v-3.414a2 2 0 00-.293-1.293L2.293 6.707A1 1 0 012 6V4z" />
                                     </svg>
                                     <span className="hidden sm:inline">Фильтры</span>
                                 </button>
@@ -277,16 +291,31 @@ const AppContent: React.FC = () => {
             </div>
 
             {/* Filter Panel */}
-            <FilterPanel isOpen={isFiltersOpen} onClose={closeFilters} />
+            <FilterPanel
+                isOpen={isFiltersOpen}
+                onClose={closeFilters}
+                onApplyFilters={setActiveFilters}
+                activeFilters={activeFilters}
+            />
 
             {/* Cart */}
-            <Cart isOpen={isCartOpen} onClose={closeCart} />
+            <Cart
+                isOpen={isCartOpen}
+                onClose={closeCart}
+                cartItems={cartItems}
+                onRemoveFromCart={handleRemoveFromCart}
+                onUpdateQuantity={handleUpdateCartQuantity}
+                onClearCart={handleClearCart}
+            />
 
             {/* Product Modal */}
             <ProductModal
                 product={selectedProduct}
                 isOpen={isProductModalOpen}
                 onClose={closeProductModal}
+                onAddToCart={handleAddToCart}
+                onToggleFavorite={handleToggleFavorite}
+                isFavorite={favorites.some(fav => fav.product.id === selectedProduct?.id)}
             />
 
             {/* Favorites Modal */}

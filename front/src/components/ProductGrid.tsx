@@ -1,30 +1,13 @@
 import React from 'react';
 import { ProductCard } from './ProductCard';
-
-interface Product {
-    id: number;
-    name: string;
-    manufacturer: string;
-    league: string;
-    season: string;
-    price: number;
-    size: string[];
-    condition: string;
-    images: string[];
-    badges: Badge[];
-}
-
-interface Badge {
-    type: string;
-    value: string;
-}
+import { Product, Favorite } from '../services/api';
 
 interface ProductGridProps {
     products: Product[];
     onProductClick: (product: Product) => void;
     onAddToCart: (product: Product) => void;
     onToggleFavorite: (product: Product) => void;
-    favorites: Product[];
+    favorites: Favorite[];
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -53,7 +36,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                     onClick={() => onProductClick(product)}
                     onAddToCart={onAddToCart}
                     onToggleFavorite={onToggleFavorite}
-                    isFavorite={favorites.some(fav => fav.id === product.id)}
+                    isFavorite={favorites.some(fav => fav.product.id === product.id)}
                 />
             ))}
         </div>

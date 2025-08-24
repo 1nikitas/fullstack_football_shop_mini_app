@@ -1,26 +1,11 @@
 import React from 'react';
-
-interface Badge {
-    type: string;
-    value: string;
-}
+import { Product } from '../services/api';
 
 interface ProductCardProps {
-    product: {
-        id: number;
-        name: string;
-        manufacturer: string;
-        league: string;
-        season: string;
-        price: number;
-        size: string[];
-        condition: string;
-        images: string[];
-        badges: Badge[];
-    };
+    product: Product;
     onClick: () => void;
-    onAddToCart: (product: any) => void;
-    onToggleFavorite: (product: any) => void;
+    onAddToCart: (product: Product) => void;
+    onToggleFavorite: (product: Product) => void;
     isFavorite: boolean;
 }
 
@@ -49,7 +34,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {/* Image */}
             <div className="relative aspect-square overflow-hidden">
                 <img
-                    src={product.images[0]}
+                    src={product.images[0]?.image_url || '/placeholder-image.jpg'}
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                 />
@@ -91,9 +76,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 </div>
 
                 {/* Image Counter */}
-                {product.images.length > 1 && (
+                {product.images_count > 1 && (
                     <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                        {product.images.length} фото
+                        {product.images_count} фото
                     </div>
                 )}
             </div>
@@ -121,13 +106,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 text-xs sm:text-sm font-medium px-3 py-1.5 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        👁️ Подробнее
+                        Подробнее
                     </button>
                 </div>
 
                 {/* Size and Condition */}
                 <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span className="truncate">Размер: {product.size.join(', ')}</span>
+                    <span className="truncate">Размер: {product.size}</span>
                     <span className="ml-2">{product.condition}</span>
                 </div>
             </div>
