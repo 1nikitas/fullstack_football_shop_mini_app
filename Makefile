@@ -13,6 +13,22 @@ SSL_DIR = ssl_certs
 DJANGO_PORT = 8000
 REACT_PORT = 3000
 
+# Проверка доступности портов
+.PHONY: check-ports
+check-ports:
+	@echo "Проверка доступности портов..."
+	@if lsof -i :$(DJANGO_PORT) > /dev/null 2>&1; then \
+		echo "⚠️  Порт $(DJANGO_PORT) занят. Попробуйте другой порт:"; \
+		echo "   DJANGO_PORT=8001 make run"; \
+		exit 1; \
+	fi
+	@if lsof -i :$(REACT_PORT) > /dev/null 2>&1; then \
+		echo "⚠️  Порт $(REACT_PORT) занят. Попробуйте другой порт:"; \
+		echo "   REACT_PORT=3001 make run"; \
+		exit 1; \
+	fi
+	@echo "✅ Порты $(DJANGO_PORT) и $(REACT_PORT) свободны"
+
 # Цели по умолчанию
 .DEFAULT_GOAL := help
 
@@ -29,7 +45,10 @@ help:
 	@echo "  make ssl-setup    - Настройка SSL сертификатов для $(DOMAIN)"
 	@echo "  make setup-hosts  - Настройка hosts файла для домена $(DOMAIN)"
 	@echo "  make check-domain - Проверка доступности домена $(DOMAIN)"
+	@echo "  make check-env    - Проверка окружения (Node.js, Python, Poetry)"
+	@echo "  make check-ports  - Проверка доступности портов"
 	@echo "  make stop         - Остановка всех сервисов"
+	@echo "  make force-stop   - Принудительная остановка сервисов"
 	@echo "  make clean        - Очистка временных файлов"
 	@echo "  make lint         - Проверка кода линтерами"
 	@echo "  make test         - Запуск тестов"
@@ -51,12 +70,12 @@ install-frontend:
 	@echo "Фронтенд зависимости установлены"
 
 .PHONY: run
-run: setup-local
+run: setup-local check-env check-ports
 	@echo "Запуск приложения на localhost..."
 	$(MAKE) -j 2 backend-local frontend-local
 
 .PHONY: run-prod
-run-prod: ssl-setup setup-prod setup-hosts
+run-prod: ssl-setup setup-prod setup-hosts check-env check-ports
 	@echo "Запуск приложения с доменом $(DOMAIN)..."
 	$(MAKE) -j 2 backend-prod frontend-prod
 
@@ -149,6 +168,21 @@ check-domain:
 		echo "Скрипт check_domain.sh не найден"; \
 	fi
 
+.PHONY: check-env
+check-env:
+	@echo "Проверка окружения..."
+	@echo "Node.js версия: $(shell node --version)"
+	@echo "Python версия: $(shell python3 --version)"
+	@echo "Poetry версия: $(shell poetry --version)"
+	@echo "npm версия: $(shell npm --version)"
+	@if [ "$$(node --version | cut -d'v' -f2 | cut -d'.' -f1)" -lt 20 ]; then \
+		echo "⚠️  Node.js версия должна быть 20+ для работы с Vite"; \
+		echo "   Текущая версия: $$(node --version)"; \
+		echo "   Обновите Node.js: https://nodejs.org/"; \
+		exit 1; \
+	fi
+	@echo "✅ Окружение готово к работе"
+
 .PHONY: stop
 stop:
 	@echo "Остановка сервисов..."
@@ -156,6 +190,19 @@ stop:
 	@pkill -f "npm run dev" || true
 	@pkill -f "poetry run" || true
 	@echo "Сервисы остановлены"
+
+.PHONY: force-stop
+force-stop:
+	@echo "Принудительная остановка сервисов..."
+	@if lsof -i :$(DJANGO_PORT) > /dev/null 2>&1; then \
+		echo "Остановка процесса на порту $(DJANGO_PORT)..."; \
+		lsof -ti :$(DJANGO_PORT) | xargs kill -9 || true; \
+	fi
+	@if lsof -i :$(REACT_PORT) > /dev/null 2>&1; then \
+		echo "Остановка процесса на порту $(REACT_PORT)..."; \
+		lsof -ti :$(REACT_PORT) | xargs kill -9 || true; \
+	fi
+	@echo "Сервисы принудительно остановлены"
 
 .PHONY: clean
 clean:
