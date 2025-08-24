@@ -47,9 +47,9 @@ if [ $? -eq 0 ]; then
     if systemctl is-active --quiet nginx; then
         echo "✅ Nginx успешно настроен и запущен"
         echo "🌐 Теперь доступно:"
-        echo "   - https://rooneyform.ru (фронтенд)"
-        echo "   - https://rooneyform.ru/api/ (бэкенд)"
-        echo "   - https://rooneyform.ru/admin/ (Django admin)"
+echo "   - https://rooneyform.ru (фронтенд на порту 3001)"
+echo "   - https://rooneyform.ru/api/ (бэкенд на порту 8001)"
+echo "   - https://rooneyform.ru/admin/ (Django admin на порту 8001)"
     else
         echo "❌ Ошибка запуска Nginx"
         systemctl status nginx
