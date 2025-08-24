@@ -15,7 +15,7 @@ football-mini-app/
 
 ## Требования
 
-- Python 3.8+
+- Python 3.12+
 - Poetry (для управления зависимостями Python)
 - Node.js 16+ и npm
 - OpenSSL (для генерации SSL сертификатов)
@@ -36,6 +36,14 @@ make install-backend
 ```bash
 make install-frontend
 ```
+
+### ⚠️ Важно: Poetry настройка
+
+Если возникает ошибка Poetry "No file/folder found for package football-mini-app", это нормально. Проект настроен для работы без режима пакета:
+
+- В корне проекта: `package-mode = false`
+- В папке backend: отдельный `pyproject.toml` для Django
+- Используйте `poetry install --no-root` для установки зависимостей
 
 ## Запуск
 

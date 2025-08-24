@@ -41,7 +41,7 @@ install: install-backend install-frontend
 .PHONY: install-backend
 install-backend:
 	@echo "Установка зависимостей бэкенда через Poetry..."
-	cd $(BACKEND_DIR) && $(POETRY) install
+	cd $(BACKEND_DIR) && $(POETRY) install --no-root
 	@echo "Бэкенд зависимости установлены"
 
 .PHONY: install-frontend
