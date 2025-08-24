@@ -115,7 +115,7 @@ setup-prod:
 	fi
 
 .PHONY: backend
-backend: poetry-check setup-local
+backend: poetry-check setup-prod
 	@echo "Запуск бэкенд сервера на localhost через Poetry..."
 	cd $(BACKEND_DIR) && $(POETRY) run python manage.py runserver 0.0.0.0:$(DJANGO_PORT) --settings=football_mini_app.settings_local
 

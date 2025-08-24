@@ -14,7 +14,7 @@ from datetime import datetime
 # Данные для доступа к Telegram API: https://my.telegram.org/apps
 
 api_id = "15465531"  # Замените на ваш api_id (получается на my.telegram.org)
-api_hash = "9ff33616247248afe167b5de803740ba"  # Замените на ваш api_hash
+api_hash = "9ff33616247248afe167b5de803740"  # Замените на ваш api_hash
 channel_username = "rooneyform_warehouse"  # Имя канала для парсинга
 
 # Папка для сохранения фотографий
