@@ -1,7 +1,7 @@
 // Конфигурация окружения
 export const config = {
     development: {
-        apiUrl: 'http://localhost:8000',
+        apiUrl: 'http://localhost:8001',
         domain: 'localhost',
         isDev: true
     },
