@@ -33,10 +33,13 @@ ALLOWED_HOSTS = [
     "45.153.191.250",
 ]
 
+
 CSRF_TRUSTED_ORIGINS = [
     "https://rooneyform.ru",
     "https://www.rooneyform.ru",
-    "http://localhost:3001",
+    "http://localhost:3000",
+    "https://localhost:3000",
+    "http://45.153.191.250",
     "https://45.153.191.250",
 ]
 
@@ -148,6 +151,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://www.rooneyform.ru",
     "http://localhost:3000",
     "https://localhost:3000",
+    "http://45.153.191.250",
+    "https://45.153.191.250",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
