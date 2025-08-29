@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-p-0hoycrs$-t%k*ng%wwp!5yg-8xkvt0)&o0gc2n1zo6%_w8yb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["rooneyform.store", "www.rooneyform.store"]
+ALLOWED_HOSTS = ["rooneyform.store", "www.rooneyform.store", "45.153.191.250"]
 
 CSRF_TRUSTED_ORIGINS = ["https://rooneyform.store", "https://www.rooneyform.store"]
 
