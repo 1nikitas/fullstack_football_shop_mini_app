@@ -14,6 +14,8 @@ export default defineConfig({
       'www.rooneyform.ru',
       'e3a4adaedb71.ngrok-free.app',
       '45.153.191.250',
+      'rooneyform.store',
+      'www.rooneyform.store',
     ],
     cors: true,
     hmr: {
