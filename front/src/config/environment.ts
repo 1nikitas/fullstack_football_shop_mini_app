@@ -1,12 +1,12 @@
 // Конфигурация окружения
 export const config = {
     development: {
-        apiUrl: 'http://45.153.191.250:8001',
+        apiUrl: 'https://rooneyform.store',
         domain: 'localhost',
         isDev: true
     },
     production: {
-        apiUrl: 'https://rooneyform.ru:8000',
+        apiUrl: 'https://rooneyform.store',
         domain: 'rooneyform.ru',
         isDev: false
     }
