@@ -87,12 +87,15 @@
 
 /* Telegram WebApp specific styles */
 .telegram-webapp {
-  /* Prevent pull-to-refresh */
-  overscroll-behavior: none;
+  /* Prevent pull-to-refresh and swipe-to-close */
+  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
 
   /* Better viewport handling */
   height: 100vh;
   height: 100dvh;
+  min-height: 100vh;
 
   /* Prevent zoom on input focus */
   input,
@@ -100,6 +103,29 @@
   select {
     font-size: 16px;
   }
+
+  /* Prevent swipe gestures in top area */
+  touch-action: pan-y pinch-zoom;
+
+  /* Ensure content doesn't trigger close gesture */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection in input fields */
+.telegram-webapp input,
+.telegram-webapp textarea,
+.telegram-webapp select {
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 @layer base {

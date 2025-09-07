@@ -117,20 +117,60 @@ class ApiService {
 
     // Продукты
     async getProducts(filters?: Partial<Filters>, search?: string): Promise<Product[]> {
-        const params = new URLSearchParams();
+        try {
+            // Для тестирования используем моковые данные
+            if (process.env.NODE_ENV === 'development' || !this.baseUrl.includes('rooneyform.store')) {
+                const { mockProducts } = await import('../data/products');
+                let filteredProducts = [...mockProducts];
 
-        if (filters) {
-            Object.entries(filters).forEach(([key, value]) => {
-                if (value) params.append(key, value);
-            });
+                // Применяем фильтры
+                if (filters) {
+                    if (filters.manufacturer) {
+                        filteredProducts = filteredProducts.filter(p => p.manufacturer === filters.manufacturer);
+                    }
+                    if (filters.league) {
+                        filteredProducts = filteredProducts.filter(p => p.league === filters.league);
+                    }
+                    if (filters.season) {
+                        filteredProducts = filteredProducts.filter(p => p.season === filters.season);
+                    }
+                    if (filters.condition) {
+                        filteredProducts = filteredProducts.filter(p => p.condition === filters.condition);
+                    }
+                }
+
+                // Применяем поиск
+                if (search) {
+                    const searchLower = search.toLowerCase();
+                    filteredProducts = filteredProducts.filter(p =>
+                        p.name.toLowerCase().includes(searchLower) ||
+                        p.team.toLowerCase().includes(searchLower) ||
+                        p.manufacturer.toLowerCase().includes(searchLower)
+                    );
+                }
+
+                return filteredProducts;
+            }
+
+        // Реальный API
+            const params = new URLSearchParams();
+
+            if (filters) {
+                Object.entries(filters).forEach(([key, value]) => {
+                    if (value) params.append(key, value);
+                });
+            }
+
+            if (search) params.append('search', search);
+
+            const queryString = params.toString();
+            const endpoint = `/products/${queryString ? `?${queryString}` : ''}`;
+
+            return this.request<Product[]>(endpoint);
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            throw error;
         }
-
-        if (search) params.append('search', search);
-
-        const queryString = params.toString();
-        const endpoint = `/products/${queryString ? `?${queryString}` : ''}`;
-
-        return this.request<Product[]>(endpoint);
     }
 
     async getProduct(id: number): Promise<Product> {
@@ -143,19 +183,79 @@ class ApiService {
 
     // Корзина
     async getCart(telegramId: number): Promise<CartItem[]> {
-        return this.request<CartItem[]>(`/cart/by_telegram_id/?telegram_id=${telegramId}`);
+        try {
+            // Для тестирования используем моковые данные
+            if (process.env.NODE_ENV === 'development' || !this.baseUrl.includes('rooneyform.store')) {
+                // Возвращаем пустую корзину для тестирования
+                return [];
+            }
+
+            return this.request<CartItem[]>(`/cart/by_telegram_id/?telegram_id=${telegramId}`);
+        } catch (error) {
+            console.error('Error fetching cart:', error);
+            return [];
+        }
     }
 
     async addToCart(telegramId: number, productId: number, quantity: number, selectedSize: string): Promise<CartItem> {
-        return this.request<CartItem>('/cart/', {
-            method: 'POST',
-            body: JSON.stringify({
-                telegram_id: telegramId,
-                product: productId,
-                quantity,
-                selected_size: selectedSize,
-            }),
-        });
+        try {
+            // Для тестирования используем моковые данные
+            if (process.env.NODE_ENV === 'development' || !this.baseUrl.includes('rooneyform.store')) {
+                // Создаем моковый элемент корзины
+                const mockCartItem: CartItem = {
+                    id: Date.now(),
+                    product: {
+                        id: productId,
+                        name: "Тестовый товар",
+                        team: "Тест",
+                        national_team: "",
+                        brand: "Test",
+                        manufacturer: "Test",
+                        league: "Test League",
+                        type: "Test",
+                        season: "2024",
+                        kit_type: "Test",
+                        condition: "Новая",
+                        price: 1000,
+                        size: selectedSize,
+                        color: "Test",
+                        features: "Test",
+                        description: "Test",
+                        withPlayer: false,
+                        contacts: "Test",
+                        hashtags: "Test",
+                        post_url: "Test",
+                        is_available: true,
+                        stock_quantity: 1,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        images: [],
+                        images_count: 0,
+                        badges: []
+                    },
+                    quantity,
+                    selected_size: selectedSize,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                console.log('Mock cart item added:', mockCartItem);
+                return mockCartItem;
+            }
+
+            return this.request<CartItem>('/cart/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    telegram_id: telegramId,
+                    product: productId,
+                    quantity,
+                    selected_size: selectedSize,
+                }),
+            });
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            throw error;
+        }
     }
 
     async updateCartItem(id: number, quantity: number): Promise<CartItem> {
@@ -179,17 +279,74 @@ class ApiService {
 
     // Избранное
     async getFavorites(telegramId: number): Promise<Favorite[]> {
-        return this.request<Favorite[]>(`/favorites/by_telegram_id/?telegram_id=${telegramId}`);
+        try {
+            // Для тестирования используем моковые данные
+            if (process.env.NODE_ENV === 'development' || !this.baseUrl.includes('rooneyform.store')) {
+                // Возвращаем пустое избранное для тестирования
+                return [];
+            }
+
+            return this.request<Favorite[]>(`/favorites/by_telegram_id/?telegram_id=${telegramId}`);
+        } catch (error) {
+            console.error('Error fetching favorites:', error);
+            return [];
+        }
     }
 
     async addToFavorites(telegramId: number, productId: number): Promise<Favorite> {
-        return this.request<Favorite>('/favorites/', {
-            method: 'POST',
-            body: JSON.stringify({
-                telegram_id: telegramId,
-                product: productId,
-            }),
-        });
+        try {
+            // Для тестирования используем моковые данные
+            if (process.env.NODE_ENV === 'development' || !this.baseUrl.includes('rooneyform.store')) {
+                // Создаем моковый элемент избранного
+                const mockFavorite: Favorite = {
+                    id: Date.now(),
+                    product: {
+                        id: productId,
+                        name: "Тестовый товар",
+                        team: "Тест",
+                        national_team: "",
+                        brand: "Test",
+                        manufacturer: "Test",
+                        league: "Test League",
+                        type: "Test",
+                        season: "2024",
+                        kit_type: "Test",
+                        condition: "Новая",
+                        price: 1000,
+                        size: "M",
+                        color: "Test",
+                        features: "Test",
+                        description: "Test",
+                        withPlayer: false,
+                        contacts: "Test",
+                        hashtags: "Test",
+                        post_url: "Test",
+                        is_available: true,
+                        stock_quantity: 1,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        images: [],
+                        images_count: 0,
+                        badges: []
+                    },
+                    created_at: new Date().toISOString()
+                };
+
+                console.log('Mock favorite added:', mockFavorite);
+                return mockFavorite;
+            }
+
+            return this.request<Favorite>('/favorites/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    telegram_id: telegramId,
+                    product: productId,
+                }),
+            });
+        } catch (error) {
+            console.error('Error adding to favorites:', error);
+            throw error;
+        }
     }
 
     async removeFromFavorites(id: number): Promise<void> {
@@ -204,15 +361,41 @@ class ApiService {
 
     // Заказы
     async createOrder(telegramId: number, shippingAddress: string, phoneNumber: string, notes?: string): Promise<Order> {
-        return this.request<Order>('/orders/create_from_cart/', {
-            method: 'POST',
-            body: JSON.stringify({
-                telegram_id: telegramId,
-                shipping_address: shippingAddress,
-                phone_number: phoneNumber,
-                notes: notes || '',
-            }),
-        });
+        try {
+            // Для тестирования используем моковые данные
+            if (process.env.NODE_ENV === 'development' || !this.baseUrl.includes('rooneyform.store')) {
+                // Создаем моковый заказ
+                const mockOrder: Order = {
+                    id: Date.now(),
+                    user: telegramId,
+                    order_number: `ORD-${Date.now().toString(36).toUpperCase()}`,
+                    status: 'pending',
+                    total_amount: 1000,
+                    shipping_address: shippingAddress,
+                    phone_number: phoneNumber,
+                    notes: notes || '',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    items: []
+                };
+
+                console.log('Mock order created:', mockOrder);
+                return mockOrder;
+            }
+
+            return this.request<Order>('/orders/create_from_cart/', {
+                method: 'POST',
+                body: JSON.stringify({
+                    telegram_id: telegramId,
+                    shipping_address: shippingAddress,
+                    phone_number: phoneNumber,
+                    notes: notes || '',
+                }),
+            });
+        } catch (error) {
+            console.error('Error creating order:', error);
+            throw error;
+        }
     }
 
     async getOrders(telegramId: number): Promise<Order[]> {

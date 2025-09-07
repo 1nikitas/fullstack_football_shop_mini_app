@@ -28,20 +28,20 @@ const AppContent: React.FC = () => {
         league: '',
         season: '',
         condition: '',
+        size: '',
         priceRange: [0, 10000]
     });
 
-    const { isTelegramWebApp, safeAreaTop, canGoBack, goBack } = useTelegramWebApp();
-
-    // Моковый telegram_id для тестирования (в реальном приложении будет получен из Telegram WebApp)
-    const mockTelegramId = 123456789;
+    const { isTelegramWebApp, safeAreaTop, canGoBack, goBack, telegramId } = useTelegramWebApp();
 
     // Загрузка продуктов при монтировании компонента
     useEffect(() => {
         loadProducts();
-        loadCart();
-        loadFavorites();
-    }, []);
+        if (telegramId) {
+            loadCart();
+            loadFavorites();
+        }
+    }, [telegramId]);
 
     const loadProducts = async () => {
         try {
@@ -56,8 +56,10 @@ const AppContent: React.FC = () => {
     };
 
     const loadCart = async () => {
+        if (!telegramId) return;
+
         try {
-            const cartData = await apiService.getCart(mockTelegramId);
+            const cartData = await apiService.getCart(telegramId);
             setCartItems(cartData);
         } catch (error) {
             console.error('Ошибка загрузки корзины:', error);
@@ -65,8 +67,10 @@ const AppContent: React.FC = () => {
     };
 
     const loadFavorites = async () => {
+        if (!telegramId) return;
+
         try {
-            const favoritesData = await apiService.getFavorites(mockTelegramId);
+            const favoritesData = await apiService.getFavorites(telegramId);
             setFavorites(favoritesData);
         } catch (error) {
             console.error('Ошибка загрузки избранного:', error);
@@ -126,9 +130,14 @@ const AppContent: React.FC = () => {
     };
 
     const handleAddToCart = async (product: Product) => {
+        if (!telegramId) {
+            alert('Не удалось определить пользователя Telegram');
+            return;
+        }
+
         try {
             const newCartItem = await apiService.addToCart(
-                mockTelegramId,
+                telegramId,
                 product.id,
                 1,
                 product.size || 'M'
@@ -136,10 +145,16 @@ const AppContent: React.FC = () => {
             await loadCart(); // Перезагружаем корзину
         } catch (error) {
             console.error('Ошибка добавления в корзину:', error);
+            alert('Ошибка добавления в корзину');
         }
     };
 
     const handleToggleFavorite = async (product: Product) => {
+        if (!telegramId) {
+            alert('Не удалось определить пользователя Telegram');
+            return;
+        }
+
         try {
             const isFavorite = favorites.some(fav => fav.product.id === product.id);
 
@@ -149,12 +164,13 @@ const AppContent: React.FC = () => {
                     await apiService.removeFromFavorites(favoriteItem.id);
                 }
             } else {
-                await apiService.addToFavorites(mockTelegramId, product.id);
+                await apiService.addToFavorites(telegramId, product.id);
             }
 
             await loadFavorites(); // Перезагружаем избранное
         } catch (error) {
             console.error('Ошибка работы с избранным:', error);
+            alert('Ошибка работы с избранным');
         }
     };
 
@@ -167,6 +183,7 @@ const AppContent: React.FC = () => {
             }
         } catch (error) {
             console.error('Ошибка удаления из избранного:', error);
+            alert('Ошибка удаления из избранного');
         }
     };
 
@@ -176,6 +193,7 @@ const AppContent: React.FC = () => {
             await loadCart();
         } catch (error) {
             console.error('Ошибка удаления из корзины:', error);
+            alert('Ошибка удаления из корзины');
         }
     };
 
@@ -185,15 +203,36 @@ const AppContent: React.FC = () => {
             await loadCart();
         } catch (error) {
             console.error('Ошибка обновления количества:', error);
+            alert('Ошибка обновления количества');
         }
     };
 
     const handleClearCart = async () => {
+        if (!telegramId) return;
+
         try {
-            await apiService.clearCart(mockTelegramId);
+            await apiService.clearCart(telegramId);
             await loadCart();
         } catch (error) {
             console.error('Ошибка очистки корзины:', error);
+            alert('Ошибка очистки корзины');
+        }
+    };
+
+    const handleCreateOrder = async (shippingAddress: string, phoneNumber: string, notes: string) => {
+        if (!telegramId) {
+            alert('Не удалось определить пользователя Telegram');
+            return false;
+        }
+
+        try {
+            const order = await apiService.createOrder(telegramId, shippingAddress, phoneNumber, notes);
+            console.log('Заказ создан:', order);
+            return true;
+        } catch (error) {
+            console.error('Ошибка создания заказа:', error);
+            alert('Ошибка создания заказа. Попробуйте еще раз.');
+            return false;
         }
     };
 
@@ -210,9 +249,10 @@ const AppContent: React.FC = () => {
         const matchesLeague = !activeFilters.league || product.league === activeFilters.league;
         const matchesSeason = !activeFilters.season || product.season === activeFilters.season;
         const matchesCondition = !activeFilters.condition || product.condition === activeFilters.condition;
+        const matchesSize = !activeFilters.size || product.size === activeFilters.size;
         const matchesPrice = product.price >= activeFilters.priceRange[0] && product.price <= activeFilters.priceRange[1];
 
-        return matchesSearch && matchesManufacturer && matchesLeague && matchesSeason && matchesCondition && matchesPrice;
+        return matchesSearch && matchesManufacturer && matchesLeague && matchesSeason && matchesCondition && matchesSize && matchesPrice;
     });
 
     if (loading) {
@@ -233,9 +273,9 @@ const AppContent: React.FC = () => {
                 paddingTop: isTelegramWebApp
                     ? `${safeAreaTop + (window.innerWidth < 1024 ? 16 : 0)}px`
                     : (window.innerWidth < 1024 ? '7vh' : '0'),
-                // Разрешаем скролл даже в Telegram WebApp, чтобы не закрывалось приложение
-                overflow: 'auto',
-                height: isTelegramWebApp ? '7vh' : 'auto'
+                // Обеспечиваем правильную высоту для предотвращения закрытия
+                minHeight: isTelegramWebApp ? '100vh' : 'auto',
+                height: isTelegramWebApp ? 'auto' : 'auto'
             }}
         >
             <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8"></div>
@@ -249,9 +289,10 @@ const AppContent: React.FC = () => {
 
             {/* Main Content with Scroll */}
             <div
-                className={`${isTelegramWebApp ? 'h-full overflow-y-auto' : ''}`}
+                className={`${isTelegramWebApp ? 'overflow-y-auto' : ''}`}
                 style={{
-                    height: isTelegramWebApp ? `calc(120vh - ${safeAreaTop}px)` : 'auto'
+                    height: isTelegramWebApp ? `calc(100vh - ${safeAreaTop}px - 80px)` : 'auto',
+                    minHeight: isTelegramWebApp ? 'calc(100vh - 80px)' : 'auto'
                 }}
             >
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -306,6 +347,7 @@ const AppContent: React.FC = () => {
                 onRemoveFromCart={handleRemoveFromCart}
                 onUpdateQuantity={handleUpdateCartQuantity}
                 onClearCart={handleClearCart}
+                onCreateOrder={handleCreateOrder}
             />
 
             {/* Product Modal */}

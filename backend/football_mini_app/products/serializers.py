@@ -30,7 +30,7 @@ class ProductSerializer(serializers.ModelSerializer):
     # Добавляем поля для совместимости с фронтендом
     name = serializers.SerializerMethodField()
     manufacturer = serializers.CharField(source="brand")
-    league = serializers.CharField(source="team")
+    league = serializers.CharField(source="league")
     type = serializers.CharField(source="kit_type")
     description = serializers.CharField(source="features")
     withPlayer = serializers.SerializerMethodField()
@@ -98,6 +98,7 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
         fields = [
             "team",
             "national_team",
+            "league",
             "brand",
             "season",
             "kit_type",

@@ -49,7 +49,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         if manufacturer:
             queryset = queryset.filter(brand__icontains=manufacturer)
         if league:
-            queryset = queryset.filter(team__icontains=league)
+            queryset = queryset.filter(league__icontains=league)
         if season:
             queryset = queryset.filter(season__icontains=season)
         if condition:
@@ -81,7 +81,7 @@ class ProductViewSet(viewsets.ModelViewSet):
                 "manufacturer": list(
                     products.values_list("brand", flat=True).distinct()
                 ),
-                "league": list(products.values_list("team", flat=True).distinct()),
+                "league": list(products.values_list("league", flat=True).distinct()),
                 "season": list(products.values_list("season", flat=True).distinct()),
                 "condition": list(
                     products.values_list("condition", flat=True).distinct()

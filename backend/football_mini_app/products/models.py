@@ -9,6 +9,7 @@ class Product(models.Model):
     national_team = models.CharField(
         max_length=255, blank=True, null=True, verbose_name="Сборная"
     )
+    league = models.CharField(max_length=255, blank=True, null=True, verbose_name="Лига")
     brand = models.CharField(max_length=100, verbose_name="Бренд")
     season = models.CharField(max_length=50, verbose_name="Сезон")
     kit_type = models.CharField(max_length=100, verbose_name="Тип формы")
